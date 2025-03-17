@@ -1,4 +1,4 @@
-# Progressive Hybrid Recommendation System
+# Progressive Hybrid Product Recommendation for Emails 
 This repository implements a progressive recommendation system that combines a cold-start collaborative filtering model with online learning and persistent user queues. The system is designed to adapt over time by incorporating new browsing events (views, carts, removals, and purchases) while preserving historical knowledge and enforcing business rules—such as not recommending or storing purchased products.
 
 ## Overview
@@ -77,7 +77,78 @@ A SQLite database (recommendation.db) stores each user's recommendation queue in
 Each queue is a dictionary with a key "pool" that holds a list of items:
 [productID, counter, score]
 - Rules Enforced:
-Do Not Recommend Purchased Products
-Do Not Add Purchased Products to the Queue
-Remove Purchased Products from the Queue
+	- Do Not Recommend Purchased Products
+	- Do Not Add Purchased Products to the Queue
+	- Remove Purchased Products from the Queue
+
+## Predefined Rules and Fallbacks
+
+- **Cleaning Process:**
+Purchased products are filtered out from the persistent queue.
+- **Fallback Candidates:**
+If the cleaned queue is too small (e.g., fewer than 6 items), fallback candidates are generated using:
+	- Global popular items (from purchase counts).
+	- Collaborative filtering and category-based popular items (filtered to exclude purchased items).
+- **Rotation Logic:**
+Recommended items have their counter incremented and are rotated to the end of the queue so that the user sees fresh items on subsequent runs.
+
+## Training Process
+The **training.py** script:
+
+- Data Filtering:
+Loads historical browsing data, filtering by a target number of unique users.
+- Mapping Creation:
+Creates contiguous mappings for user and product IDs.
+- Model Training:
+Trains a collaborative filtering model using labeled events (purchase = 1, non-purchase = 0).
+- Persistence:
+Saves the cold model weights (trained_model.pt), and the user and product mappings (user_mapping.pkl, product_mapping.pkl).
+
+## Inference and Online Updates
+The **inference.py** script:
+
+- Model Loading:
+Loads the cold model and mappings.
+- Delta Data Detection:
+Checks for new browsing data (delta data) since the last update.
+- Online Training Update:
+If new delta data is available, the model is updated online and the new weights are saved.
+- User-Specific Queue Processing:
+	- Loads the persistent queue for each user.
+	- Removes any purchased products from the queue.
+	- Merges the queue with newly computed candidate scores.
+	- Applies fallback and rotation logic to ensure fresh recommendations.
+- Output:
+Final recommendations and updated queues are saved (e.g., CSV outputs for recommendations and debug activity).
+
+## Usage
+1. **Training:**
+
+Run the training script to generate the initial cold model and mappings:
+```bash
+python training.py
+```
+2. **Inference and Online Updates:**
+
+Run the inference script to update the model with new delta data and generate recommendations:
+```bash
+python inference.py
+```
+3. **Data Files:**
+   
+Place your browsing data CSV files in the BrowsingData folder.
+
+4. **Database:**
+
+The system creates/updates recommendation.db automatically.
+
+## Considerations and Future Improvements
+- **Model Drift:**
+Monitor performance to prevent drift due to continuous online updates. Consider periodic retraining from scratch if necessary.
+- **User-Specific Policies:**
+Fine-tune rules for handling purchased items or for tailoring fallback logic.
+- **Fallback Strategies:**
+Additional fallback mechanisms (e.g., content-based filtering) could further enhance recommendation quality.
+- **Logging and Monitoring:**
+Implement more detailed logging for production monitoring and debugging.
 
