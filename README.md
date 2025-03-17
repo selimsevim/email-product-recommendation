@@ -142,6 +142,22 @@ Place your browsing data CSV files in the BrowsingData folder.
 
 The system creates/updates recommendation.db automatically.
 
+## Debugging and Development
+
+For development and debugging, we intentionally limit the model to process data from only 15 users. This makes it easier and faster to see how the model behaves and to validate any changes. The smaller dataset allows for quick iterations and more efficient troubleshooting without the overhead of a full-scale dataset.
+
+### How to Adjust the User Limit
+
+The limit is set in the configuration for debugging purposes. Here how the code looks:
+
+```python
+if len(all_original_users) > 15:
+    selected_original_users = random.sample(all_original_users, 15)
+else:
+    selected_original_users = all_original_users
+
+```
+
 ## Considerations and Future Improvements
 - **Model Drift:**
 Monitor performance to prevent drift due to continuous online updates. Consider periodic retraining from scratch if necessary.
