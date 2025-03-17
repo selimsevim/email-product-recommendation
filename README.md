@@ -1,4 +1,4 @@
-# Progressive Hybrid Product Recommendation for Emails 
+# Hybrid Product Recommendation Tool for Emails 
 This repository implements a progressive recommendation system that combines a cold-start collaborative filtering model with online learning and persistent user queues. The system is designed to adapt over time by incorporating new browsing events (views, carts, removals, and purchases) while preserving historical knowledge and enforcing business rules—such as not recommending or storing purchased products.
 
 ## Overview
